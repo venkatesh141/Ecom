@@ -1,0 +1,56 @@
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: 'Ve-#n$k97'
+      MYSQL_DATABASE: ecommerce
+      MYSQL_ROOT_HOST: '%'   # allows root access from other containers
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  backend:
+    build: ./Ecommerce
+    container_name: backend-container
+    ports:
+      - "2424:2424"
+    environment:
+      SPRING_APPLICATION_NAME: Ecommerce
+      SERVER_PORT: 2424
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 'Ve-#n$k97'
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.MySQLDialect
+      SECRETEJWTSTRING: phegondev123456789phegondev123456789
+      AWS_ACCESS_KEY: ${AWS_ACCESS_KEY:-""}
+      AWS_SECRET_KEY: ${AWS_SECRET_KEY:-""}
+    depends_on:
+      - mysql
+    command: >
+      sh -c "sleep 15 && java -jar app.jar"
+    networks:
+      - app-network
+
+  frontend:
+    build: ./venky-ecommerce
+    container_name: frontend-container
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_API_URL: http://backend:2424   # IMPORTANT: frontend will use this to reach backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+
+volumes:
+  mysql_data:
